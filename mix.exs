@@ -41,7 +41,7 @@ defmodule SimpleJWTAuthentication.Mixfile do
 
   defp description do
     """
-		A plug that checks for presence of a simple token for authentication
+		A plug that checks the signature and expiration of a jwt for authentication
     """
   end
 
