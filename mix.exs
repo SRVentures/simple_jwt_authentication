@@ -35,7 +35,8 @@ defmodule SimpleJWTAuthentication.Mixfile do
       {:plug, "~> 1.2.2"},
       {:jose, "~> 1.8"},
       {:poison, "~> 3.0", only: [:dev, :test]},
-      {:credo, "~> 0.4.12", only: [:dev, :test]}
+      {:credo, "~> 0.4.12", only: [:dev, :test],
+      {:ex_doc, "~> 0.11", only: :dev}}
     ]
   end
 
