@@ -1,25 +1,46 @@
-defmodule SimpleTokenAuthenticationTest do
+defmodule SimpleJWTAuthenticationTest do
   use ExUnit.Case, async: false
   use Plug.Test
+  alias JOSE.{JWT, JWS}
 
-  @opts SimpleTokenAuthentication.init([])
+  @opts SimpleJWTAuthentication.init([])
 
-  defmacro with_token(token, do: expression) do
+  defmacro with_secret(secret, do: expression) do
 		quote do
-			Application.put_env(:simple_token_authentication, :token, unquote(token))
+			Application.put_env(:simple_jwt_authentication, :secret_key,
+        unquote(secret))
 			unquote(expression)
-			Application.put_env(:simple_token_authentication, :token, nil)
+			Application.put_env(:simple_jwt_authentication, :secret_key, nil)
 		end
 	end
 
-  describe "without a token" do
+  defp create_jwt(secret, opts \\ []) do
+    exp = Keyword.get_lazy(opts, :exp, &create_exp/0)
+
+    jwk = %{"kty" => "oct", "k" => secret}
+    jws = %{"alg" => "HS256"}
+    jwt = %{"test" => true, "exp" => exp}
+
+    jwk
+    |> JWT.sign(jws, jwt)
+    |> JWS.compact
+    |> elem(1)
+  end
+
+  defp create_exp(year_offset \\ 1) do
+    DateTime.utc_now
+    |> Map.update!(:year, &(&1 + year_offset))
+    |> DateTime.to_unix
+  end
+
+  describe "without a secret" do
 		test "returns a 401 status code" do
-			with_token(nil) do
+			with_secret(nil) do
 				# Create a test connection
 				conn = conn(:get, "/foo")
 
 				# Invoke the plug
-				conn = SimpleTokenAuthentication.call(conn, @opts)
+				conn = SimpleJWTAuthentication.call(conn, @opts)
 
 				# Assert the response and status
 				assert conn.status == 401
@@ -29,15 +50,38 @@ defmodule SimpleTokenAuthenticationTest do
 
   describe "with an invalid token" do
 		test "returns a 401 status code" do
-      with_token("fake_token") do
+      secret = "c2VjcmV0"
+      bad_secret = "c2VjcmV0IQ"
+      with_secret(secret) do
+        jwt = create_jwt(bad_secret)
         # Create a test connection
         conn =
           :get
           |> conn("/foo")
-          |> put_req_header("authorization", "wrong_token")
+          |> put_req_header("authorization", "Bearer " <> jwt)
 
         # Invoke the plug
-        conn = SimpleTokenAuthentication.call(conn, @opts)
+        conn = SimpleJWTAuthentication.call(conn, @opts)
+
+        # Assert the response and status
+        assert conn.status == 401
+      end
+		end
+	end
+
+  describe "with an expired token" do
+		test "returns a 401 status code" do
+      secret = "c2VjcmV0"
+      with_secret(secret) do
+        jwt = create_jwt(secret, exp: create_exp(-1))
+        # Create a test connection
+        conn =
+          :get
+          |> conn("/foo")
+          |> put_req_header("authorization", "Bearer " <> jwt)
+
+        # Invoke the plug
+        conn = SimpleJWTAuthentication.call(conn, @opts)
 
         # Assert the response and status
         assert conn.status == 401
@@ -47,15 +91,17 @@ defmodule SimpleTokenAuthenticationTest do
 
   describe "with a valid token" do
 		test "returns a 200 status code" do
-      with_token("fake_token") do
+      secret = "c2VjcmV0"
+      with_secret(secret) do
+        jwt = create_jwt(secret)
         # Create a test connection
         conn =
           :get
           |> conn("/foo")
-          |> put_req_header("authorization", "fake_token")
+          |> put_req_header("authorization", "Bearer " <> jwt)
 
         # Invoke the plug
-        conn = SimpleTokenAuthentication.call(conn, @opts)
+        conn = SimpleJWTAuthentication.call(conn, @opts)
 
         # Assert the response and status
         assert conn.status != 401

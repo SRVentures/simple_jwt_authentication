@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :simple_token_authentication, key: :value
+#     config :simple_jwt_authentication, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:simple_token_authentication, :key)
+#     Application.get_env(:simple_jwt_authentication, :key)
 #
 # Or configure a 3rd-party app:
 #

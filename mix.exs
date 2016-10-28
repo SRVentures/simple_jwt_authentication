@@ -1,10 +1,10 @@
-defmodule SimpleTokenAuthentication.Mixfile do
+defmodule SimpleJWTAuthentication.Mixfile do
   use Mix.Project
 
 	@version "0.1.0"
 
   def project do
-    [app: :simple_token_authentication,
+    [app: :simple_jwt_authentication,
      version: @version,
      elixir: "~> 1.3",
      description: description,
@@ -33,6 +33,8 @@ defmodule SimpleTokenAuthentication.Mixfile do
   defp deps do
     [
       {:plug, "~> 1.2.2"},
+      {:jose, "~> 1.8"},
+      {:poison, "~> 3.0", only: [:dev, :test]},
       {:credo, "~> 0.4.12", only: [:dev, :test]}
     ]
   end
@@ -46,11 +48,11 @@ defmodule SimpleTokenAuthentication.Mixfile do
   defp package do
     [
       files: ["lib", "mix.exs",  "README*"],
-      maintainers: ["Travis Elnicky", "Dhiman Swadia", "Arthur Weagel"],
+      maintainers: ["Trevor Fenn"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/SRVentures/simple_token_authentication",
-        "Docs" => "https://hexdocs.pm/simple_token_authentication/#{@version}/"
+        "GitHub" => "https://github.com/SRVentures/simple_jwt_authentication",
+        "Docs" => "https://hexdocs.pm/simple_jwt_authentication/#{@version}/"
       }
     ]
   end
