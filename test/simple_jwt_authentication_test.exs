@@ -16,10 +16,11 @@ defmodule SimpleJWTAuthenticationTest do
 
   defp create_jwt(secret, opts \\ []) do
     exp = Keyword.get_lazy(opts, :exp, &create_exp/0)
+    fields = Keyword.get(opts, :fields, %{})
 
     jwk = %{"kty" => "oct", "k" => secret}
     jws = %{"alg" => "HS256"}
-    jwt = %{"test" => true, "exp" => exp}
+    jwt = Map.merge(%{"test" => true, "exp" => exp}, fields)
 
     jwk
     |> JWT.sign(jws, jwt)
@@ -105,6 +106,68 @@ defmodule SimpleJWTAuthenticationTest do
 
         # Assert the response and status
         assert conn.status != 401
+      end
+		end
+	end
+
+  describe "with missing required fields" do
+		test "returns a 401 status code" do
+      secret = "c2VjcmV0"
+      with_secret(secret) do
+        jwt = create_jwt(secret)
+        # Create a test connection
+        conn =
+          :get
+          |> conn("/foo")
+          |> put_req_header("authorization", "Bearer " <> jwt)
+
+        # Invoke the plug
+        opts = SimpleJWTAuthentication.init(user_id: ["metadata", "user_id"])
+        conn = SimpleJWTAuthentication.call(conn, opts)
+
+        # Assert the response and status
+        assert conn.status == 401
+      end
+		end
+	end
+
+  describe "with required fields" do
+		test "returns a 200 status code" do
+      secret = "c2VjcmV0"
+      with_secret(secret) do
+        jwt = create_jwt(secret, fields: %{"metadata" => %{"user_id" => 1}})
+        # Create a test connection
+        conn =
+          :get
+          |> conn("/foo")
+          |> put_req_header("authorization", "Bearer " <> jwt)
+
+        # Invoke the plug
+        opts = SimpleJWTAuthentication.init(user_id: ["metadata", "user_id"])
+        conn = SimpleJWTAuthentication.call(conn, opts)
+
+        # Assert the response and status
+        assert conn.status != 401
+      end
+		end
+
+    test "assigns the fields" do
+      secret = "c2VjcmV0"
+      with_secret(secret) do
+        jwt = create_jwt(secret, fields: %{"metadata" => %{"user_id" => 1}})
+        # Create a test connection
+        conn =
+          :get
+          |> conn("/foo")
+          |> put_req_header("authorization", "Bearer " <> jwt)
+
+        # Invoke the plug
+        opts = SimpleJWTAuthentication.init(user_id: ["metadata", "user_id"])
+        conn = SimpleJWTAuthentication.call(conn, opts)
+
+        # Assert the response and status
+        assert conn.status != 401
+        assert conn.assigns[:user_id] == 1
       end
 		end
 	end

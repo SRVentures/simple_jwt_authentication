@@ -2,7 +2,10 @@
 
 Authorizes user requests by verifying a JWT against a supplied secret key.
 Currently only supports using the `Authorization` header with the value in the
-format `Bearer YOUR_JWT`.
+format `Bearer YOUR_JWT`. Can also accept required fields as `opts`, where the
+`key` is the field name (and what it will be assigned as on the connection), and
+the `value` is the path (that will be passed in to `Kernel.get_in/2`) to the
+field.
 
 ## Usage
 ### Phoenix Integration
@@ -21,6 +24,15 @@ format `Bearer YOUR_JWT`.
       get "/hello", HelloController, :hello
     end
   end
+  ```
+
+  - With required fields
+
+  ```elixir
+  pipeline :api do
+    plug SimpleJWTAuthentication, user_id: ["metadata", "user_id"]
+  end
+
   ```
 
 ## Installation
