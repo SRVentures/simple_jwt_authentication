@@ -52,7 +52,7 @@ defmodule SimpleJWTAuthentication.Mixfile do
       maintainers: ["Trevor Fenn"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/SRVentures/simple_jwt_authentication",
+        "GitHub" => "https://github.com/podium/simple_jwt_authentication",
         "Docs" => "https://hexdocs.pm/simple_jwt_authentication/#{@version}/"
       }
     ]
